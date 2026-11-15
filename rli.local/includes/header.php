@@ -22,6 +22,7 @@ if (isset($_SESSION['user_id'])) {
     }
 }
 
+// Проверка голосования в столовой
 $showCanteenPopup = false;
 $todayDateFormatted = date('d.m.Y');
 $todayMenu = ['soup' => 'Суп дня', 'main_dish' => 'Второе блюдо', 'drink' => 'Напиток'];
@@ -101,6 +102,7 @@ function voteCanteen(val) {
             <a href="index.php">Главная</a>
             <a href="constitution.php">Конституция</a>
             <a href="activists.php">Активисты</a>
+            <a href="menu.php">Меню</a>
             
             <?php if (isset($_SESSION['user_id'])): ?>
                 <span style="font-size: 13px; font-weight: 500; color: var(--text-main);">

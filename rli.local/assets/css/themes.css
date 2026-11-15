@@ -1,4 +1,4 @@
-/* 1. Физмат — Ярко-фиолетовый */
+
 body.theme-fizmat {
     --bg-main: #ffffff;
     --primary: #5c4e7a;
@@ -7,7 +7,7 @@ body.theme-fizmat {
     --border-color: #d8cfe6;
 }
 
-/* 2. Инженерный — Насыщенный синий с оранжевым акцентом карточек */
+
 body.theme-engineering {
     --bg-main: #ffffff;
     --primary: #0066ff;
@@ -16,7 +16,7 @@ body.theme-engineering {
     --border-color: #f39c12;
 }
 
-/* 3. Политехнический — Ярко-желтый */
+
 body.theme-polytech {
     --bg-main: #ffffff;
     --primary: #b88924;
@@ -25,7 +25,7 @@ body.theme-polytech {
     --border-color: #e6e600;
 }
 
-/* 4. Роснефть — Черный */
+
 body.theme-rosneft {
     --bg-main: #ffffff;
     --primary: #1a1a1a;
@@ -34,7 +34,7 @@ body.theme-rosneft {
     --border-color: #111111;
 }
 
-/* 5. Биохим — Ярко-зеленый */
+
 body.theme-biohim {
     --bg-main: #ffffff;
     --primary: #235931;
@@ -43,7 +43,7 @@ body.theme-biohim {
     --border-color: #1ed700;
 }
 
-/* 6. Гуманитарный — Бордово-винный */
+
 body.theme-humanitarian {
     --bg-main: #ffffff;
     --primary: #630c0c;

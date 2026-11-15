@@ -10,7 +10,7 @@ $newsList = $pdo->query("
 ")->fetchAll();
 ?>
 
-
+<!-- Статичные фоновые линии только на главной странице -->
 <div class="global-bg-lines">
     <svg viewBox="0 0 1440 900" fill="none" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
         <path class="bg-curve" d="M 320 -50 C 780 350, 920 650, -40 750" />
@@ -18,7 +18,7 @@ $newsList = $pdo->query("
     </svg>
 </div>
 
-
+<!-- Главный экран -->
 <section class="hero-section">
     <div class="container hero-grid">
         <div>
@@ -32,7 +32,7 @@ $newsList = $pdo->query("
                 </div>
             </div>
             <div class="hero-buttons" style="margin-top:22px; display:flex; align-items:center; gap:20px;">
-                <a href="#study" style="color:var(--text-main); text-decoration:none; font-weight:600; font-size:13px;">Расписание</a>
+                <a href="menu.php" style="color:var(--text-main); text-decoration:none; font-weight:600; font-size:13px;">Меню столовой</a>
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <a href="dashboard.php" class="btn-primary">Мой Кабинет</a>
                 <?php else: ?>
@@ -43,20 +43,14 @@ $newsList = $pdo->query("
 
         <div style="display:flex; justify-content:center; align-items:center;">
             <?php 
-                // По умолчанию показываем общую эмблему РЛИ для гостей и учителей
                 $crestToDisplay = 'assets/img/crests/main_emblem.jpg';
-
-                // Если вошел ученик и у него выбран профиль — подставляем герб его профиля
                 if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'student' && !empty($_SESSION['profile'])) {
                     $profileKey = $_SESSION['profile'];
                     $profileCrestPath = 'assets/img/crests/' . $profileKey . '.jpg';
-                    
-                    // Проверяем, существует ли файл герба этого профиля на сервере
                     if (file_exists(__DIR__ . '/' . $profileCrestPath)) {
                         $crestToDisplay = $profileCrestPath;
                     }
                 }
-
                 if (file_exists(__DIR__ . '/' . $crestToDisplay)): 
             ?>
                 <img src="<?= $crestToDisplay ?>" alt="Герб" style="width:260px; height:260px; object-fit:cover; border-radius:50%; box-shadow:var(--shadow);">
@@ -69,89 +63,95 @@ $newsList = $pdo->query("
     </div>
 </section>
 
-
+<!-- Лента новостей с каруселью по 3 блока -->
 <section style="padding: 30px 0 40px;">
     <div class="container">
-        <h2 style="font-size:22px; font-weight:700; margin-bottom:20px; color:var(--text-main);">Лента новостей и объявлений</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="font-size:22px; font-weight:700; color:var(--text-main);">Лента новостей и объявлений</h2>
+            <?php if (count($newsList) > 3): ?>
+                <div style="display:flex; gap:8px;">
+                    <button onclick="slideNews(-1)" style="background:var(--bg-surface); border:1px solid var(--border-color); width:36px; height:36px; border-radius:50%; cursor:pointer; font-weight:bold; color:var(--primary);">‹</button>
+                    <button onclick="slideNews(1)" style="background:var(--bg-surface); border:1px solid var(--border-color); width:36px; height:36px; border-radius:50%; cursor:pointer; font-weight:bold; color:var(--primary);">›</button>
+                </div>
+            <?php endif; ?>
+        </div>
+
         <?php if (empty($newsList)): ?>
-            <p style="color:var(--text-muted); background:rgba(255,255,255,0.85); padding:12px 16px; border-radius:8px; display:inline-block;">Пока нет опубликованных объявлений от Правительства.</p>
+            <p style="color:var(--text-muted); background:rgba(255,255,255,0.85); padding:16px 20px; border-radius:8px; display:inline-block;">Пока нет объявлений</p>
         <?php else: ?>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                <?php foreach ($newsList as $item): ?>
-                    <div style="background:rgba(255,255,255,0.95); border-radius:var(--radius); border:1.5px solid var(--line-color); overflow:hidden; cursor:pointer; box-shadow:var(--shadow);"
-                         onclick="openNewsModal(<?= htmlspecialchars(json_encode($item)) ?>)">
-                        <?php if (!empty($item['photo']) && file_exists(__DIR__ . '/' . $item['photo'])): ?>
-                            <img src="<?= htmlspecialchars($item['photo']) ?>" alt="Фото" style="width:100%; height:160px; object-fit:cover;">
-                        <?php endif; ?>
-                        <div style="padding: 16px;">
-                            <span style="font-size:11px; color:var(--text-muted);"><?= date('d.m.Y H:i', strtotime($item['created_at'])) ?></span>
-                            <h3 style="font-size:16px; font-weight:600; margin: 6px 0; color:var(--primary);"><?= htmlspecialchars($item['title']) ?></h3>
-                            <p style="font-size:13px; color:var(--text-muted);"><?= mb_substr(strip_tags($item['content']), 0, 85) ?>...</p>
+            <div style="overflow:hidden; width:100%;">
+                <div id="newsSlider" style="display:flex; gap:20px; transition:transform 0.3s ease; width:100%;">
+                    <?php foreach ($newsList as $item): ?>
+                        <div style="min-width: calc(33.333% - 14px); flex: 0 0 calc(33.333% - 14px); background:rgba(255,255,255,0.95); border-radius:var(--radius); border:1.5px solid var(--line-color); overflow:hidden; cursor:pointer; box-shadow:var(--shadow);"
+                             onclick="openNewsModal(<?= htmlspecialchars(json_encode($item)) ?>)">
+                            <?php if (!empty($item['photo']) && file_exists(__DIR__ . '/' . $item['photo'])): ?>
+                                <img src="<?= htmlspecialchars($item['photo']) ?>" alt="Фото" style="width:100%; height:160px; object-fit:cover;">
+                            <?php endif; ?>
+                            <div style="padding: 16px;">
+                                <span style="font-size:11px; color:var(--text-muted);"><?= date('d.m.Y H:i', strtotime($item['created_at'])) ?></span>
+                                <h3 style="font-size:16px; font-weight:600; margin: 6px 0; color:var(--primary);"><?= htmlspecialchars($item['title']) ?></h3>
+                                <p style="font-size:13px; color:var(--text-muted);"><?= mb_substr(strip_tags($item['content']), 0, 85) ?>...</p>
+                            </div>
                         </div>
-                    </div>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
+                </div>
             </div>
         <?php endif; ?>
     </div>
 </section>
 
+<!-- Профильные классы лицея -->
 <section class="profiles-section" id="study" style="padding: 30px 0 70px;">
     <div class="container">
         <h2 style="font-size:22px; font-weight:700; margin-bottom:24px; color:var(--text-main);">Профильные классы лицея</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 22px;">
-            
             <div class="profile-card-box">
-                <img src="assets/img/crests/fizmat.jpg" alt="Физмат" style="width:68px; height:68px; object-fit:cover; border-radius:50%;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'68\' height=\'68\'><rect width=\'100%\' height=\'100%\' fill=\'%23f3e8ff\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-size=\'12\' fill=\'#5c4e7a\'>Физмат</text></svg>'">
+                <img src="assets/img/crests/fizmat.jpg" alt="Физмат" style="width:68px; height:68px; object-fit:cover; border-radius:50%;">
                 <div>
                     <h3 style="font-size:15px; font-weight:600; margin-bottom:4px;">Физико-математический</h3>
                     <p style="font-size:12px; color:var(--text-muted);">Углубленная математика и физика</p>
                 </div>
             </div>
-
             <div class="profile-card-box">
-                <img src="assets/img/crests/engineering.jpg" alt="Инженерный" style="width:68px; height:68px; object-fit:cover; border-radius:50%;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'68\' height=\'68\'><rect width=\'100%\' height=\'100%\' fill=\'%23e0f2fe\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-size=\'12\' fill=\'#0066ff\'>Инж</text></svg>'">
+                <img src="assets/img/crests/engineering.jpg" alt="Инженерный" style="width:68px; height:68px; object-fit:cover; border-radius:50%;">
                 <div>
                     <h3 style="font-size:15px; font-weight:600; margin-bottom:4px;">Инженерный</h3>
                     <p style="font-size:12px; color:var(--text-muted);">Робототехника и моделирование</p>
                 </div>
             </div>
-
             <div class="profile-card-box">
-                <img src="assets/img/crests/polytech.jpg" alt="Политех" style="width:68px; height:68px; object-fit:cover; border-radius:50%;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'68\' height=\'68\'><rect width=\'100%\' height=\'100%\' fill=\'%23fef9c3\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-size=\'12\' fill=\'#854d0e\'>PTCH</text></svg>'">
+                <img src="assets/img/crests/polytech.jpg" alt="Политех" style="width:68px; height:68px; object-fit:cover; border-radius:50%;">
                 <div>
                     <h3 style="font-size:15px; font-weight:600; margin-bottom:4px;">Политехнический (PTCH)</h3>
                     <p style="font-size:12px; color:var(--text-muted);">Программирование и IT</p>
                 </div>
             </div>
-
             <div class="profile-card-box">
-                <img src="assets/img/crests/rosneft.jpg" alt="Роснефть" style="width:68px; height:68px; object-fit:cover; border-radius:50%;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'68\' height=\'68\'><rect width=\'100%\' height=\'100%\' fill=\'%23f3f4f6\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-size=\'12\' fill=\'#111\'>Роснефть</text></svg>'">
+                <img src="assets/img/crests/rosneft.jpg" alt="Роснефть" style="width:68px; height:68px; object-fit:cover; border-radius:50%;">
                 <div>
                     <h3 style="font-size:15px; font-weight:600; margin-bottom:4px;">Технический (Роснефть)</h3>
                     <p style="font-size:12px; color:var(--text-muted);">Профильная подготовка</p>
                 </div>
             </div>
-
             <div class="profile-card-box">
-                <img src="assets/img/crests/biohim.jpg" alt="Биохим" style="width:68px; height:68px; object-fit:cover; border-radius:50%;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'68\' height=\'68\'><rect width=\'100%\' height=\'100%\' fill=\'%23dcfce7\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-size=\'12\' fill=\'#166534\'>Биохим</text></svg>'">
+                <img src="assets/img/crests/biohim.jpg" alt="Биохим" style="width:68px; height:68px; object-fit:cover; border-radius:50%;">
                 <div>
                     <h3 style="font-size:15px; font-weight:600; margin-bottom:4px;">Биолого-химический</h3>
                     <p style="font-size:12px; color:var(--text-muted);">Естественные науки и медицина</p>
                 </div>
             </div>
-
             <div class="profile-card-box">
-                <img src="assets/img/crests/humanitarian.jpg" alt="Гумнар" style="width:68px; height:68px; object-fit:cover; border-radius:50%;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'68\' height=\'68\'><rect width=\'100%\' height=\'100%\' fill=\'%23ffe4e6\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-size=\'12\' fill=\'#881337\'>Гумнар</text></svg>'">
+                <img src="assets/img/crests/humanitarian.jpg" alt="Гумнар" style="width:68px; height:68px; object-fit:cover; border-radius:50%;">
                 <div>
                     <h3 style="font-size:15px; font-weight:600; margin-bottom:4px;">Гуманитарный (ГУМНАР)</h3>
                     <p style="font-size:12px; color:var(--text-muted);">История, право и языки</p>
                 </div>
             </div>
-
         </div>
     </div>
 </section>
 
+<!-- Модальное окно новости -->
 <div id="newsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
     <div style="background:#fff; color:#102a43; padding:30px; border-radius:8px; max-width:560px; width:90%; max-height:85vh; overflow-y:auto; position:relative;">
         <button onclick="closeNewsModal()" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
@@ -163,6 +163,19 @@ $newsList = $pdo->query("
 </div>
 
 <script>
+let currentSlide = 0;
+function slideNews(direction) {
+    const slider = document.getElementById('newsSlider');
+    if (!slider) return;
+    const items = slider.children;
+    const maxSlide = Math.max(0, items.length - 3);
+    currentSlide += direction;
+    if (currentSlide < 0) currentSlide = 0;
+    if (currentSlide > maxSlide) currentSlide = maxSlide;
+    const offset = currentSlide * (items[0].offsetWidth + 20);
+    slider.style.transform = `translateX(-${offset}px)`;
+}
+
 function openNewsModal(item) {
     document.getElementById('modalNewsTitle').innerText = item.title;
     document.getElementById('modalNewsContent').innerText = item.content;
