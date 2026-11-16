@@ -45,13 +45,12 @@ $isDirector = ($userLogin === 'director' || $userPosCode === 'director' || mb_st
 $isPremier = ($userPosCode === 'prime_minister' || mb_stripos($userPosTitle, 'Премьер-министр') !== false);
 $isSpeaker = ($userPosCode === 'parliament_speaker' || mb_stripos($userPosTitle, 'Председатель Парламента') !== false);
 $isSbrlHead = ($userPosCode === 'sbrl_head' || mb_stripos($userPosTitle, 'Глава СБРЛ') !== false);
-$isZavuch = ($isDirector || mb_stripos($userData['full_name'], 'завуч') !== false);
+$isTeacher = ($userRole === 'teacher');
 
-// 1. ДЕЙСТВИЯ ДИРЕКТОРА (Выдача и отбор должностей)
+// 1. ДЕЙСТВИЯ ДИРЕКТОРА
 if ($isDirector && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_role'])) {
     $targetUser = (int)$_POST['target_user_id'];
     $posCode = trim($_POST['position_code']);
-    
     if (isset($officialPositions[$posCode])) {
         $posData = $officialPositions[$posCode];
         $upd = $pdo->prepare("UPDATE users SET branch = ?, position_title = ?, position_code = ? WHERE id = ?");
@@ -82,29 +81,40 @@ if ($isPremier && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// 3. ОБНАЛИЧИВАНИЕ ЛИР (Председатель Парламента)
-if ($isSpeaker && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cash_out_student'])) {
-    $targetStudentId = (int)$_POST['target_student_id'];
-    $amountToCash = (int)$_POST['amount_to_cash'];
-    if ($amountToCash > 0) {
-        $stmt = $pdo->prepare("INSERT INTO cash_outs (student_id, speaker_id, amount) VALUES (?, ?, ?)");
-        $stmt->execute([$targetStudentId, $userId, $amountToCash]);
-        $msg = "Лиры успешно списаны с аккаунта ученика.";
+// 3. ДОБАВЛЕНИЕ И УДАЛЕНИЕ ЗАКОНОВ (Председатель Парламента)
+if ($isSpeaker && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['add_law'])) {
+        $lawTitle = trim($_POST['law_title']);
+        $lawContent = trim($_POST['law_content']);
+        if ($lawTitle && $lawContent) {
+            $stmt = $pdo->prepare("INSERT INTO laws (title, content) VALUES (?, ?)");
+            $stmt->execute([$lawTitle, $lawContent]);
+            $msg = "Закон успешно добавлен в Конституцию.";
+        }
+    } elseif (isset($_POST['delete_law_id'])) {
+        $delLawId = (int)$_POST['delete_law_id'];
+        $pdo->prepare("DELETE FROM laws WHERE id = ?")->execute([$delLawId]);
+        $msg = "Закон удален.";
+    } elseif (isset($_POST['cash_out_student'])) {
+        $targetStudentId = (int)$_POST['target_student_id'];
+        $amountToCash = (int)$_POST['amount_to_cash'];
+        if ($amountToCash > 0) {
+            $stmt = $pdo->prepare("INSERT INTO cash_outs (student_id, speaker_id, amount) VALUES (?, ?, ?)");
+            $stmt->execute([$targetStudentId, $userId, $amountToCash]);
+            $msg = "Лиры успешно списаны с аккаунта ученика.";
+        }
+    } elseif (isset($_POST['update_rates'])) {
+        $newPhys = (float)$_POST['rate_physical'];
+        $newMent = (float)$_POST['rate_mental'];
+        $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'rate_physical'")->execute([$newPhys]);
+        $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'rate_mental'")->execute([$newMent]);
+        $msg = "Ставки зарплат обновлены.";
+        $ratePhysical = $newPhys; $rateMental = $newMent;
     }
 }
 
-// 4. ИЗМЕНЕНИЕ СТАВОК (Председатель Парламента)
-if ($isSpeaker && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_rates'])) {
-    $newPhys = (float)$_POST['rate_physical'];
-    $newMent = (float)$_POST['rate_mental'];
-    $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'rate_physical'")->execute([$newPhys]);
-    $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = 'rate_mental'")->execute([$newMent]);
-    $msg = "Ставки зарплат обновлены.";
-    $ratePhysical = $newPhys; $rateMental = $newMent;
-}
-
-// 5. НАЧИСЛЕНИЕ ЧАСОВ (Учителя)
-if ($userRole === 'teacher' && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issue_check'])) {
+// 4. НАЧИСЛЕНИЕ ЧАСОВ (Учителя)
+if ($isTeacher && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issue_check'])) {
     $studentId = (int)$_POST['student_id'];
     $hours = (float)$_POST['hours'];
     $workType = $_POST['work_type'];
@@ -116,7 +126,7 @@ if ($userRole === 'teacher' && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_
     }
 }
 
-// 6. ВЫПИСКА ШТРАФОВ (СБРЛ)
+// 5. ВЫПИСКА ШТРАФОВ (СБРЛ)
 if ($isSbrlHead && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issue_fine'])) {
     $studentId = (int)$_POST['student_id'];
     $reasonType = (int)$_POST['reason_type'];
@@ -165,10 +175,10 @@ if ($isSbrlHead && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issue_
             <div style="display:flex; align-items:center; gap:16px;">
                 <?php if ($crestFile): ?><img src="<?= $crestFile ?>" alt="Герб" class="dash-crest-large"><?php endif; ?>
                 <div>
-                    <span style="font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:4px;">
+                    <span style="font-size:11px; color:var(--text-muted); text-transform:uppercase; display:block; margin-bottom:4px;">
                         <?= htmlspecialchars($userData['branch'] !== 'none' ? $userData['branch'] . ' / ' . $userData['position_title'] : 'Ученик лицея') ?>
                     </span>
-                    <h2 style="font-size:20px; font-weight:600;"><?= htmlspecialchars($userData['full_name']) ?></h2>
+                    <h2 style="font-size:20px;"><?= htmlspecialchars($userData['full_name']) ?></h2>
                     <p style="font-size:13px; color:var(--text-muted); margin-top:2px;">Класс: <?= htmlspecialchars($profileNameFormatted) ?></p>
                 </div>
             </div>
@@ -183,7 +193,7 @@ if ($isSbrlHead && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issue_
 
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; align-items:start;">
             <div>
-                <h3 style="font-size:15px; font-weight:600; margin-bottom:12px;">Заработок (Чеки)</h3>
+                <h3 style="font-size:15px; margin-bottom:12px;">Заработок (Чеки)</h3>
                 <?php if (empty($checks)): ?><p style="color:var(--text-muted); font-size:13px;">Начислений нет.</p>
                 <?php else: foreach ($checks as $check): ?>
                     <div class="receipt-card">
@@ -194,7 +204,7 @@ if ($isSbrlHead && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issue_
             </div>
 
             <div>
-                <h3 style="font-size:15px; font-weight:600; margin-bottom:12px; color:#991b1b;">Штрафы и Чеки обналичивания</h3>
+                <h3 style="font-size:15px; margin-bottom:12px; color:#991b1b;">Штрафы и Чеки обналичивания</h3>
                 <?php foreach ($cashOuts as $co): ?>
                     <div class="receipt-card" style="border-color:#fef08a; background:#fefce8;">
                         <div class="receipt-top" style="color:#b45309;"><span>Чек обналичивания</span><span>-<?= $co['amount'] ?> лир</span></div>
@@ -212,17 +222,11 @@ if ($isSbrlHead && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issue_
 
     <?php if ($msg): ?><div class="alert-success" style="margin-bottom:20px;"><?= htmlspecialchars($msg) ?></div><?php endif; ?>
 
-    <!-- ПАНЕЛЬ ДИРЕКТОРА (Выдача и отбор должностей + Просмотр столовой) -->
+    <!-- ПАНЕЛЬ ДИРЕКТОРА -->
     <?php if ($isDirector): ?>
-        <?php 
-        $allUsersList = $pdo->query("SELECT id, full_name, role, branch, position_title FROM users ORDER BY full_name")->fetchAll();
-        $todayDate = date('Y-m-d');
-        $canteenList = $pdo->prepare("SELECT u.full_name, u.profile, cv.vote FROM canteen_votes cv JOIN users u ON cv.student_id = u.id WHERE cv.vote_date = ?");
-        $canteenList->execute([$todayDate]);
-        $canteenRows = $canteenList->fetchAll();
-        ?>
-        <div class="auth-box" style="max-width:100%; margin:0 0 24px 0; border-color:var(--primary);">
-            <h3 style="font-size:16px; font-weight:600; margin-bottom:12px; color:var(--primary);">👑 Панель Директора: Управление должностями</h3>
+        <?php $allUsersList = $pdo->query("SELECT id, full_name, role, branch, position_title FROM users ORDER BY full_name")->fetchAll(); ?>
+        <div class="auth-box" style="max-width:100%; margin:0 0 24px 0;">
+            <h3>Панель Директора: Управление должностями</h3>
             <form method="POST" style="display:grid; grid-template-columns: 2fr 2fr auto; gap:12px; align-items:end;">
                 <input type="hidden" name="update_role" value="1">
                 <div class="form-group" style="margin:0;">
@@ -234,7 +238,7 @@ if ($isSbrlHead && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issue_
                     </select>
                 </div>
                 <div class="form-group" style="margin:0;">
-                    <label>Назначить/отобрать должность</label>
+                    <label>Назначить или отобрать должность</label>
                     <select name="position_code" class="form-control" required>
                         <?php foreach ($officialPositions as $code => $info): ?>
                             <option value="<?= $code ?>"><?= htmlspecialchars($info['name']) ?></option>
@@ -244,39 +248,137 @@ if ($isSbrlHead && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issue_
                 <button type="submit" class="btn-primary">Применить</button>
             </form>
         </div>
+    <?php endif; ?>
 
-        <div class="auth-box" style="max-width:100%; margin:0 0 24px 0; background:var(--bg-surface);">
-            <h3 style="font-size:16px; font-weight:600; margin-bottom:12px; color:var(--primary);">📋 Список столовой на сегодня (<?= date('d.m.Y') ?>)</h3>
-            <table class="data-table">
-                <thead>
-                    <tr><th>ФИО Ученика</th><th>Класс</th><th>Статус питания</th></tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($canteenRows)): ?>
-                        <tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Никто еще не проголосовал на сегодня.</td></tr>
-                    <?php else: foreach ($canteenRows as $cr): ?>
-                        <tr>
-                            <td><strong><?= htmlspecialchars($cr['full_name']) ?></strong></td>
-                            <td><?= htmlspecialchars($cr['profile']) ?></td>
-                            <td>
-                                <span style="padding:3px 8px; border-radius:4px; font-size:11px; font-weight:600; background:<?= $cr['vote'] === 'yes' ? '#e6fffa; color:#117a65;' : '#ffe3e3; color:#a61b1b;' ?>">
-                                    <?= $cr['vote'] === 'yes' ? 'Будет кушать' : 'Не будет' ?>
-                                </span>
-                            </td>
-                        </tr>
-                    <?php endforeach; endif; ?>
-                </tbody>
-            </table>
+    <!-- ПАНЕЛЬ УЧИТЕЛЯ -->
+    <?php if ($isTeacher): ?>
+        <?php $studentsForCheck = $pdo->query("SELECT id, full_name, profile FROM users WHERE role = 'student' ORDER BY full_name")->fetchAll(); ?>
+        <div class="auth-box" style="max-width:100%; margin:0 0 24px 0;">
+            <h3>Выписать рабочие часы ученику</h3>
+            <form method="POST" style="display:grid; grid-template-columns: 2fr 1fr 1.2fr 2fr auto; gap:12px; align-items:end;">
+                <input type="hidden" name="issue_check" value="1">
+                <div class="form-group" style="margin:0;"><label>Ученик</label><select name="student_id" class="form-control" required><?php foreach ($studentsForCheck as $st): ?><option value="<?= $st['id'] ?>"><?= htmlspecialchars($st['full_name']) ?></option><?php endforeach; ?></select></div>
+                <div class="form-group" style="margin:0;"><label>Часы</label><input type="number" step="0.5" min="0.5" name="hours" class="form-control" required></div>
+                <div class="form-group" style="margin:0;"><label>Тип труда</label><select name="work_type" class="form-control"><option value="physical">Физическая</option><option value="mental">Умственная</option></select></div>
+                <div class="form-group" style="margin:0;"><label>Основание</label><input type="text" name="reason" class="form-control" value="Труд" required></div>
+                <button type="submit" class="btn-primary">Начислить</button>
+            </form>
         </div>
     <?php endif; ?>
 
-    <!-- ПАНЕЛЬ ПРЕДСЕДАТЕЛЯ ПАРЛАМЕНТА (Учет лиров и мификов) -->
+    <!-- ВЕДОМОСТЬ СТОЛОВОЙ ДЛЯ ДИРЕКТОРА И УЧИТЕЛЕЙ -->
+    <?php if ($isDirector || $isTeacher): ?>
+        <?php 
+        $todayDate = date('Y-m-d');
+        $stmtCanteen = $pdo->prepare("
+            SELECT u.id, u.full_name, u.profile, cv.vote 
+            FROM users u 
+            LEFT JOIN canteen_votes cv ON u.id = cv.student_id AND cv.vote_date = ?
+            WHERE u.role = 'student'
+            ORDER BY u.profile ASC, u.full_name ASC
+        ");
+        $stmtCanteen->execute([$todayDate]);
+        $allStudentsCanteen = $stmtCanteen->fetchAll();
+
+        $groupedByProfile = [];
+        foreach ($allStudentsCanteen as $st) {
+            $profKey = $st['profile'] ?: 'none';
+            $groupedByProfile[$profKey][] = $st;
+        }
+        ?>
+        <div class="auth-box" style="max-width:100%; margin:0 0 24px 0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="margin:0;">Ведомость столовой на сегодня (<?= date('d.m.Y') ?>)</h3>
+                <button type="button" class="btn-primary" onclick="const el = document.getElementById('canteenFullList'); el.style.display = (el.style.display === 'none') ? 'block' : 'none';">
+                    Показать / Скрыть список
+                </button>
+            </div>
+
+            <div id="canteenFullList" style="display:block;">
+                <?php if (empty($groupedByProfile)): ?>
+                    <p style="color:var(--text-muted); font-size:13px;">Зарегистрированных учеников пока нет.</p>
+                <?php else: ?>
+                    <?php foreach ($groupedByProfile as $profKey => $studentsInProfile): 
+                        $profTitle = $profileLabels[$profKey] ?? 'Без профиля';
+                    ?>
+                        <div style="margin-bottom:24px;">
+                            <h4 style="font-size:14px; background:#f0f4f8; padding:8px 14px; border:1.5px solid var(--border-color); border-bottom:none;">
+                                Профиль: <?= htmlspecialchars($profTitle) ?> (Всего: <?= count($studentsInProfile) ?>)
+                            </h4>
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:60px;">№</th>
+                                        <th>ФИО Ученика</th>
+                                        <th style="width:200px;">Статус питания</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php 
+                                    $counter = 1;
+                                    foreach ($studentsInProfile as $stRow): 
+                                        $voteStatus = $stRow['vote'];
+                                        if ($voteStatus === 'yes') {
+                                            $statusText = 'Обедает';
+                                            $badgeStyle = 'background:#e6fffa; color:#117a65; border:1px solid #99f6e4;';
+                                        } elseif ($voteStatus === 'no') {
+                                            $statusText = 'Не обедает';
+                                            $badgeStyle = 'background:#ffe3e3; color:#a61b1b; border:1px solid #fecaca;';
+                                        } else {
+                                            $statusText = 'Не дал ответ';
+                                            $badgeStyle = 'background:#f3f4f6; color:#4b5563; border:1px solid #d1d5db;';
+                                        }
+                                    ?>
+                                        <tr>
+                                            <td><?= $counter++ ?></td>
+                                            <td><?= htmlspecialchars($stRow['full_name']) ?></td>
+                                            <td>
+                                                <span style="padding:4px 10px; border-radius:4px; font-size:12px; display:inline-block; <?= $badgeStyle ?>">
+                                                    <?= $statusText ?>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <!-- ПАНЕЛЬ ПРЕДСЕДАТЕЛЯ ПАРЛАМЕНТА (Учет лиров + Добавление и удаление законов) -->
     <?php if ($isSpeaker): ?>
         <?php 
         $allStudentsForSpeaker = $pdo->query("SELECT id, full_name, profile FROM users WHERE role = 'student' ORDER BY full_name")->fetchAll();
+        $allLaws = $pdo->query("SELECT * FROM laws ORDER BY created_at DESC")->fetchAll();
         ?>
-        <div class="auth-box" style="max-width:100%; margin:0 0 24px 0; border-color:var(--primary);">
-            <h3 style="font-size:17px; font-weight:600; margin-bottom:12px; color:var(--primary);">📊 Учет лиров и мификов (Председатель Парламента)</h3>
+        <div class="auth-box" style="max-width:100%; margin:0 0 24px 0;">
+            <h3>Управление законами РЛИ (Председатель Парламента)</h3>
+            <form method="POST" style="margin-bottom:24px; padding-bottom:20px; border-bottom:1.5px solid var(--border-color);">
+                <input type="hidden" name="add_law" value="1">
+                <div class="form-group"><label>Название закона</label><input type="text" name="law_title" class="form-control" required></div>
+                <div class="form-group"><label>Содержание закона</label><textarea name="law_content" class="form-control" rows="3" required></textarea></div>
+                <button type="submit" class="btn-primary">Добавить закон в Конституцию</button>
+            </form>
+
+            <h4 style="font-size:14px; margin-bottom:10px;">Существующие законы</h4>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <?php foreach ($allLaws as $law): ?>
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#f4f7fb; padding:10px 14px; border-radius:4px; font-size:13px;">
+                        <div><b><?= htmlspecialchars($law['title']) ?></b> <span style="color:var(--text-muted); font-size:11px;">(<?= $law['created_at'] ?>)</span></div>
+                        <form method="POST" onsubmit="return confirm('Удалить этот закон?');">
+                            <input type="hidden" name="delete_law_id" value="<?= $law['id'] ?>">
+                            <button type="submit" class="btn-primary" style="padding:4px 10px; font-size:11px; border-color:#a61b1b; color:#a61b1b;">Удалить</button>
+                        </form>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <div class="auth-box" style="max-width:100%; margin:0 0 24px 0;">
+            <h3>Учет лиров и мификов (Председатель Парламента)</h3>
             <table class="data-table" style="margin-bottom:20px;">
                 <thead>
                     <tr>
@@ -304,19 +406,19 @@ if ($isSbrlHead && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issue_
                         $balanceSt = $earnedSt - $finesSt - $coSt;
                     ?>
                         <tr>
-                            <td><strong><?= htmlspecialchars($st['full_name']) ?></strong></td>
+                            <td><?= htmlspecialchars($st['full_name']) ?></td>
                             <td><?= htmlspecialchars($st['profile']) ?></td>
                             <td><?= number_format($earnedSt, 0) ?></td>
                             <td style="color:#991b1b;">-<?= $finesSt ?></td>
                             <td style="color:#b45309;">-<?= $coSt ?></td>
-                            <td><strong style="color:#117a65;"><?= number_format($balanceSt, 0) ?> лы.</strong></td>
+                            <td><span style="color:#117a65;"><?= number_format($balanceSt, 0) ?> лы.</span></td>
                             <td>
                                 <?php if ($balanceSt > 0): ?>
-                                    <form method="POST" style="display:inline;" onsubmit="return confirm('Обналичить/списать все лиры с аккаунта ученика?');">
+                                    <form method="POST" style="display:inline;" onsubmit="return confirm('Обналичить все лиры с аккаунта ученика?');">
                                         <input type="hidden" name="cash_out_student" value="1">
                                         <input type="hidden" name="target_student_id" value="<?= $stId ?>">
                                         <input type="hidden" name="amount_to_cash" value="<?= $balanceSt ?>">
-                                        <button type="submit" class="btn-primary" style="padding:4px 10px; font-size:11px; background:#b45309; border-color:#b45309;">Обналичить</button>
+                                        <button type="submit" class="btn-primary" style="padding:4px 10px; font-size:11px;">Обналичить</button>
                                     </form>
                                 <?php else: ?>
                                     <span style="font-size:12px; color:var(--text-muted);">Нет средств</span>
@@ -329,7 +431,7 @@ if ($isSbrlHead && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issue_
         </div>
 
         <div class="auth-box" style="max-width:100%; margin:0 0 24px 0;">
-            <h3 style="font-size:15px; font-weight:600; margin-bottom:12px;">Управление ставками зарплат</h3>
+            <h3>Управление ставками зарплат</h3>
             <form method="POST" style="display:grid; grid-template-columns: 1fr 1fr auto; gap:12px; align-items:end;">
                 <input type="hidden" name="update_rates" value="1">
                 <div class="form-group" style="margin:0;"><label>Физическая (лир/ч)</label><input type="number" step="10" name="rate_physical" class="form-control" value="<?= $ratePhysical ?>" required></div>
@@ -342,9 +444,9 @@ if ($isSbrlHead && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issue_
     <!-- ПАНЕЛЬ ПРЕМЬЕР-МИНИСТРА -->
     <?php if ($isPremier): ?>
         <?php $allNews = $pdo->query("SELECT n.*, u.full_name AS author_name FROM news n JOIN users u ON n.author_id = u.id ORDER BY n.created_at DESC")->fetchAll(); ?>
-        <div class="auth-box" style="max-width:100%; margin:0 0 24px 0; border-color:var(--primary);">
-            <h3 style="font-size:16px; font-weight:600; margin-bottom:12px; color:var(--primary);">📢 Панель Премьер-министра: Управление новостями</h3>
-            <form method="POST" enctype="multipart/form-data" style="margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--border-color);">
+        <div class="auth-box" style="max-width:100%; margin:0 0 24px 0;">
+            <h3>Панель Премьер-министра: Управление новостями</h3>
+            <form method="POST" enctype="multipart/form-data" style="margin-bottom:24px; padding-bottom:20px; border-bottom:1.5px solid var(--border-color);">
                 <input type="hidden" name="publish_news" value="1">
                 <div class="form-group"><label>Заголовок</label><input type="text" name="title" class="form-control" required></div>
                 <div class="form-group"><label>Фото</label><input type="file" name="photo" class="form-control" accept="image/*"></div>
@@ -352,14 +454,14 @@ if ($isSbrlHead && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issue_
                 <button type="submit" class="btn-primary">Опубликовать</button>
             </form>
 
-            <h4 style="font-size:14px; font-weight:600; margin-bottom:10px;">Существующие объявления</h4>
+            <h4 style="font-size:14px; margin-bottom:10px;">Существующие объявления</h4>
             <div style="display:flex; flex-direction:column; gap:10px;">
                 <?php foreach ($allNews as $item): ?>
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:#f4f7fb; padding:10px 14px; border-radius:6px; font-size:13px;">
-                        <div><b><?= htmlspecialchars($item['title']) ?></b> <span style="color:var(--text-muted); font-size:11px;">(<?= $item['created_at'] ?>)</span></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:#f4f7fb; padding:10px 14px; border-radius:4px; font-size:13px;">
+                        <div><span><?= htmlspecialchars($item['title']) ?></span> <span style="color:var(--text-muted); font-size:11px;">(<?= $item['created_at'] ?>)</span></div>
                         <form method="POST" onsubmit="return confirm('Удалить это объявление?');">
                             <input type="hidden" name="delete_news_id" value="<?= $item['id'] ?>">
-                            <button type="submit" style="background:#a61b1b; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:11px;">Удалить</button>
+                            <button type="submit" class="btn-primary" style="padding:4px 10px; font-size:11px; border-color:#a61b1b; color:#a61b1b;">Удалить</button>
                         </form>
                     </div>
                 <?php endforeach; ?>
@@ -367,18 +469,30 @@ if ($isSbrlHead && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['issue_
         </div>
     <?php endif; ?>
 
-    <!-- ПАНЕЛЬ УЧИТЕЛЯ -->
-    <?php if ($userRole === 'teacher'): ?>
-        <?php $studentsForCheck = $pdo->query("SELECT id, full_name, profile FROM users WHERE role = 'student' ORDER BY full_name")->fetchAll(); ?>
+    <!-- ПАНЕЛЬ ГЛАВЫ СБРЛ -->
+    <?php if ($isSbrlHead): ?>
+        <?php $studentsListForFine = $pdo->query("SELECT id, full_name, profile FROM users WHERE role = 'student' ORDER BY full_name")->fetchAll(); ?>
         <div class="auth-box" style="max-width:100%; margin:0 0 24px 0;">
-            <h3 style="font-size:16px; font-weight:600; margin-bottom:12px;">Выписать рабочие часы ученику</h3>
-            <form method="POST" style="display:grid; grid-template-columns: 2fr 1fr 1.2fr 2fr auto; gap:12px; align-items:end;">
-                <input type="hidden" name="issue_check" value="1">
-                <div class="form-group" style="margin:0;"><label>Ученик</label><select name="student_id" class="form-control" required><?php foreach ($studentsForCheck as $st): ?><option value="<?= $st['id'] ?>"><?= htmlspecialchars($st['full_name']) ?></option><?php endforeach; ?></select></div>
-                <div class="form-group" style="margin:0;"><label>Часы</label><input type="number" step="0.5" min="0.5" name="hours" class="form-control" required></div>
-                <div class="form-group" style="margin:0;"><label>Тип труда</label><select name="work_type" class="form-control"><option value="physical">Физическая</option><option value="mental">Умственная</option></select></div>
-                <div class="form-group" style="margin:0;"><label>Основание</label><input type="text" name="reason" class="form-control" value="Труд" required></div>
-                <button type="submit" class="btn-primary">Начислить</button>
+            <h3>Панель Главы СБРЛ: Выписать штраф ученику</h3>
+            <form method="POST" style="display:grid; grid-template-columns: 2fr 2fr auto; gap:12px; align-items:end;">
+                <input type="hidden" name="issue_fine" value="1">
+                <div class="form-group" style="margin:0;">
+                    <label>Нарушитель (Ученик)</label>
+                    <select name="student_id" class="form-control" required>
+                        <?php foreach ($studentsListForFine as $st): ?>
+                            <option value="<?= $st['id'] ?>"><?= htmlspecialchars($st['full_name']) ?> (<?= htmlspecialchars($st['profile']) ?>)</option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group" style="margin:0;">
+                    <label>Причина нарушения</label>
+                    <select name="reason_type" class="form-control">
+                        <option value="1">1. Нарушение очереди (-200 лир)</option>
+                        <option value="2">2. Фейковое имя (-300 лир)</option>
+                        <option value="3">3. Оскорбление сотрудника (-450 лир)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Штрафовать</button>
             </form>
         </div>
     <?php endif; ?>

@@ -1,53 +1,47 @@
-
+/* 1. Физмат — Фиолетовый */
 body.theme-fizmat {
-    --bg-main: #ffffff;
-    --primary: #5c4e7a;
-    --primary-hover: #473a61;
-    --line-color: #a800ff;
-    --border-color: #d8cfe6;
+    --primary: #7c3aed;
+    --primary-hover: #6d28d9;
+    --card-border: #9333ea;
+    --bg-image: url('../img/bg/fizmat.jpg');
 }
 
-
+/* 2. Инженерный — Синий */
 body.theme-engineering {
-    --bg-main: #ffffff;
     --primary: #0066ff;
     --primary-hover: #004ecc;
-    --line-color: #0066ff;
-    --border-color: #f39c12;
+    --card-border: #0066ff;
+    --bg-image: url('../img/bg/engineering.jpg');
 }
 
-
+/* 3. Политехнический — Желтый */
 body.theme-polytech {
-    --bg-main: #ffffff;
-    --primary: #b88924;
-    --primary-hover: #966e18;
-    --line-color: #e6e600;
-    --border-color: #e6e600;
+    --primary: #d97706;
+    --primary-hover: #b45309;
+    --card-border: #f59e0b;
+    --bg-image: url('../img/bg/polytech.jpg');
 }
 
-
+/* 4. Роснефть — Черный / Графитовый */
 body.theme-rosneft {
-    --bg-main: #ffffff;
-    --primary: #1a1a1a;
-    --primary-hover: #333333;
-    --line-color: #111111;
-    --border-color: #111111;
+    --primary: #1e293b;
+    --primary-hover: #0f172a;
+    --card-border: #334155;
+    --bg-image: url('../img/bg/rosneft.jpg');
 }
 
-
+/* 5. Биохим — Зеленый */
 body.theme-biohim {
-    --bg-main: #ffffff;
-    --primary: #235931;
-    --primary-hover: #173d21;
-    --line-color: #1ed700;
-    --border-color: #1ed700;
+    --primary: #16a34a;
+    --primary-hover: #15803d;
+    --card-border: #22c55e;
+    --bg-image: url('../img/bg/biohim.jpg');
 }
 
-
+/* 6. Гуманитарный — Бордовый */
 body.theme-humanitarian {
-    --bg-main: #ffffff;
-    --primary: #630c0c;
-    --primary-hover: #450707;
-    --line-color: #630c0c;
-    --border-color: #630c0c;
+    --primary: #831843;
+    --primary-hover: #500724;
+    --card-border: #9f1239;
+    --bg-image: url('../img/bg/humanitarian.jpg');
 }

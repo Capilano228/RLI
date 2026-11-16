@@ -10,37 +10,38 @@ $newsList = $pdo->query("
 ")->fetchAll();
 ?>
 
-<!-- Статичные фоновые линии только на главной странице -->
-<div class="global-bg-lines">
-    <svg viewBox="0 0 1440 900" fill="none" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-        <path class="bg-curve" d="M 320 -50 C 780 350, 920 650, -40 750" />
-        <path class="bg-curve" d="M 1480 500 C 1120 750, 680 900, -40 950" />
-    </svg>
-</div>
+
 
 <!-- Главный экран -->
 <section class="hero-section">
     <div class="container hero-grid">
         <div>
             <h1 class="hero-title">РЕСПУБЛИКАНСКИЙ<br>ЛИЦЕЙ-ИНТЕРНАТ</h1>
-            <div class="hero-contacts">
-                <a href="tel:+74112357710" class="hero-phone" style="font-weight:600; color:var(--text-main); text-decoration:none; font-size:15px;">+7 4112 35 77 10</a>
-                <div class="hero-socials" style="display:flex; gap:8px; margin-top:12px;">
-                    <a href="#" style="background:#0077ff; color:#fff; width:30px; height:30px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; font-size:11px; font-weight:700;">VK</a>
-                    <a href="#" style="background:#229ed9; color:#fff; width:30px; height:30px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; font-size:11px; font-weight:700;">TG</a>
-                    <a href="#" style="background:#111184; color:#fff; width:30px; height:30px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; font-size:11px; font-weight:700;">SF</a>
-                </div>
+            
+            <div class="hero-phone-wrap">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                </svg>
+                <a href="tel:+74112357710" class="hero-phone">+7 4112 35 77 10</a>
             </div>
-            <div class="hero-buttons" style="margin-top:22px; display:flex; align-items:center; gap:20px;">
-                <a href="menu.php" style="color:var(--text-main); text-decoration:none; font-weight:600; font-size:13px;">Меню столовой</a>
+
+            <div class="hero-socials">
+                <a href="#" class="social-circle" style="background:#0077ff;">VK</a>
+                <a href="#" class="social-circle" style="background:#26a5e4;">TG</a>
+                <a href="#" class="social-circle" style="background:#0a0a8c;">SF</a>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:16px;">
+                <a href="menu.php" class="btn-hero">Меню</a>
                 <?php if (isset($_SESSION['user_id'])): ?>
-                    <a href="dashboard.php" class="btn-primary">Мой Кабинет</a>
+                    <a href="dashboard.php" class="btn-hero">Мой Кабинет</a>
                 <?php else: ?>
-                    <a href="login.php" class="btn-primary">Мой Кабинет</a>
+                    <a href="login.php" class="btn-hero">Мой Кабинет</a>
                 <?php endif; ?>
             </div>
         </div>
 
+        <!-- Крупный герб/логотип справа БЕЗ обводки и рамок -->
         <div style="display:flex; justify-content:center; align-items:center;">
             <?php 
                 $crestToDisplay = 'assets/img/crests/main_emblem.jpg';
@@ -53,43 +54,43 @@ $newsList = $pdo->query("
                 }
                 if (file_exists(__DIR__ . '/' . $crestToDisplay)): 
             ?>
-                <img src="<?= $crestToDisplay ?>" alt="Герб" style="width:260px; height:260px; object-fit:cover; border-radius:50%; box-shadow:var(--shadow);">
-            <?php else: ?>
-                <div style="width:240px; height:240px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; text-align:center; padding:20px; box-shadow:var(--shadow);">
-                    РЛИ Якутия
-                </div>
+                <img src="<?= $crestToDisplay ?>" alt="Эмблема" style="width:280px; height:280px; object-fit:cover; border-radius:50%;">
             <?php endif; ?>
         </div>
     </div>
 </section>
 
-<!-- Лента новостей с каруселью по 3 блока -->
-<section style="padding: 30px 0 40px;">
+<!-- Лента новостей -->
+<section style="padding: 20px 0 40px;">
     <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h2 style="font-size:22px; font-weight:700; color:var(--text-main);">Лента новостей и объявлений</h2>
+            <h2 style="font-size:22px; color:var(--text-main);">Лента новостей и объявлений</h2>
             <?php if (count($newsList) > 3): ?>
                 <div style="display:flex; gap:8px;">
-                    <button onclick="slideNews(-1)" style="background:var(--bg-surface); border:1px solid var(--border-color); width:36px; height:36px; border-radius:50%; cursor:pointer; font-weight:bold; color:var(--primary);">‹</button>
-                    <button onclick="slideNews(1)" style="background:var(--bg-surface); border:1px solid var(--border-color); width:36px; height:36px; border-radius:50%; cursor:pointer; font-weight:bold; color:var(--primary);">›</button>
+                    <button onclick="slideNews(-1)" class="btn-primary" style="padding:6px 14px;">Назад</button>
+                    <button onclick="slideNews(1)" class="btn-primary" style="padding:6px 14px;">Вперед</button>
                 </div>
             <?php endif; ?>
         </div>
 
         <?php if (empty($newsList)): ?>
-            <p style="color:var(--text-muted); background:rgba(255,255,255,0.85); padding:16px 20px; border-radius:8px; display:inline-block;">Пока нет объявлений</p>
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px;">
+                <div style="background:#ffffff; border:2px solid var(--card-border); border-radius:var(--radius); padding:24px; color:var(--text-muted); text-align:center;">Пока нет объявлений</div>
+                <div style="background:#ffffff; border:2px solid var(--card-border); border-radius:var(--radius); padding:24px; color:var(--text-muted); text-align:center;">Пока нет объявлений</div>
+                <div style="background:#ffffff; border:2px solid var(--card-border); border-radius:var(--radius); padding:24px; color:var(--text-muted); text-align:center;">Пока нет объявлений</div>
+            </div>
         <?php else: ?>
             <div style="overflow:hidden; width:100%;">
                 <div id="newsSlider" style="display:flex; gap:20px; transition:transform 0.3s ease; width:100%;">
                     <?php foreach ($newsList as $item): ?>
-                        <div style="min-width: calc(33.333% - 14px); flex: 0 0 calc(33.333% - 14px); background:rgba(255,255,255,0.95); border-radius:var(--radius); border:1.5px solid var(--line-color); overflow:hidden; cursor:pointer; box-shadow:var(--shadow);"
+                        <div style="min-width: calc(33.333% - 14px); flex: 0 0 calc(33.333% - 14px); background:#ffffff; border-radius:var(--radius); border:2px solid var(--card-border); overflow:hidden; cursor:pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.04);"
                              onclick="openNewsModal(<?= htmlspecialchars(json_encode($item)) ?>)">
                             <?php if (!empty($item['photo']) && file_exists(__DIR__ . '/' . $item['photo'])): ?>
                                 <img src="<?= htmlspecialchars($item['photo']) ?>" alt="Фото" style="width:100%; height:160px; object-fit:cover;">
                             <?php endif; ?>
                             <div style="padding: 16px;">
                                 <span style="font-size:11px; color:var(--text-muted);"><?= date('d.m.Y H:i', strtotime($item['created_at'])) ?></span>
-                                <h3 style="font-size:16px; font-weight:600; margin: 6px 0; color:var(--primary);"><?= htmlspecialchars($item['title']) ?></h3>
+                                <h3 style="font-size:16px; margin: 6px 0; color:var(--text-main);"><?= htmlspecialchars($item['title']) ?></h3>
                                 <p style="font-size:13px; color:var(--text-muted);"><?= mb_substr(strip_tags($item['content']), 0, 85) ?>...</p>
                             </div>
                         </div>
@@ -103,47 +104,47 @@ $newsList = $pdo->query("
 <!-- Профильные классы лицея -->
 <section class="profiles-section" id="study" style="padding: 30px 0 70px;">
     <div class="container">
-        <h2 style="font-size:22px; font-weight:700; margin-bottom:24px; color:var(--text-main);">Профильные классы лицея</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 22px;">
+        <h2 style="font-size:24px; margin-bottom:24px; color:var(--text-main);">Профильные классы лицея</h2>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
             <div class="profile-card-box">
                 <img src="assets/img/crests/fizmat.jpg" alt="Физмат" style="width:68px; height:68px; object-fit:cover; border-radius:50%;">
                 <div>
-                    <h3 style="font-size:15px; font-weight:600; margin-bottom:4px;">Физико-математический</h3>
+                    <h3 style="font-size:15px; margin-bottom:4px;">Физико-математический</h3>
                     <p style="font-size:12px; color:var(--text-muted);">Углубленная математика и физика</p>
                 </div>
             </div>
             <div class="profile-card-box">
                 <img src="assets/img/crests/engineering.jpg" alt="Инженерный" style="width:68px; height:68px; object-fit:cover; border-radius:50%;">
                 <div>
-                    <h3 style="font-size:15px; font-weight:600; margin-bottom:4px;">Инженерный</h3>
+                    <h3 style="font-size:15px; margin-bottom:4px;">Инженерный</h3>
                     <p style="font-size:12px; color:var(--text-muted);">Робототехника и моделирование</p>
                 </div>
             </div>
             <div class="profile-card-box">
                 <img src="assets/img/crests/polytech.jpg" alt="Политех" style="width:68px; height:68px; object-fit:cover; border-radius:50%;">
                 <div>
-                    <h3 style="font-size:15px; font-weight:600; margin-bottom:4px;">Политехнический (PTCH)</h3>
+                    <h3 style="font-size:15px; margin-bottom:4px;">Политехнический</h3>
                     <p style="font-size:12px; color:var(--text-muted);">Программирование и IT</p>
                 </div>
             </div>
             <div class="profile-card-box">
                 <img src="assets/img/crests/rosneft.jpg" alt="Роснефть" style="width:68px; height:68px; object-fit:cover; border-radius:50%;">
                 <div>
-                    <h3 style="font-size:15px; font-weight:600; margin-bottom:4px;">Технический (Роснефть)</h3>
+                    <h3 style="font-size:15px; margin-bottom:4px;">Технический</h3>
                     <p style="font-size:12px; color:var(--text-muted);">Профильная подготовка</p>
                 </div>
             </div>
             <div class="profile-card-box">
                 <img src="assets/img/crests/biohim.jpg" alt="Биохим" style="width:68px; height:68px; object-fit:cover; border-radius:50%;">
                 <div>
-                    <h3 style="font-size:15px; font-weight:600; margin-bottom:4px;">Биолого-химический</h3>
+                    <h3 style="font-size:15px; margin-bottom:4px;">Биолого-химический</h3>
                     <p style="font-size:12px; color:var(--text-muted);">Естественные науки и медицина</p>
                 </div>
             </div>
             <div class="profile-card-box">
                 <img src="assets/img/crests/humanitarian.jpg" alt="Гумнар" style="width:68px; height:68px; object-fit:cover; border-radius:50%;">
                 <div>
-                    <h3 style="font-size:15px; font-weight:600; margin-bottom:4px;">Гуманитарный (ГУМНАР)</h3>
+                    <h3 style="font-size:15px; margin-bottom:4px;">Гуманитарный</h3>
                     <p style="font-size:12px; color:var(--text-muted);">История, право и языки</p>
                 </div>
             </div>
@@ -153,11 +154,11 @@ $newsList = $pdo->query("
 
 <!-- Модальное окно новости -->
 <div id="newsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
-    <div style="background:#fff; color:#102a43; padding:30px; border-radius:8px; max-width:560px; width:90%; max-height:85vh; overflow-y:auto; position:relative;">
-        <button onclick="closeNewsModal()" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:20px; cursor:pointer;">✕</button>
-        <img id="modalNewsPhoto" src="" alt="" style="width:100%; max-height:240px; object-fit:cover; border-radius:4px; margin-bottom:15px; display:none;">
-        <span id="modalNewsDate" style="font-size:11px; color:#627d98;"></span>
-        <h2 id="modalNewsTitle" style="margin:8px 0; font-size:18px; font-weight:600;"></h2>
+    <div style="background:#fff; color:var(--text-main); padding:30px; border-radius:var(--radius); max-width:560px; width:90%; max-height:85vh; overflow-y:auto; position:relative; border:2px solid var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+        <button onclick="closeNewsModal()" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:20px; cursor:pointer; font-weight:900;">✕</button>
+        <img id="modalNewsPhoto" src="" alt="" style="width:100%; max-height:240px; object-fit:cover; border-radius:var(--radius); margin-bottom:15px; display:none;">
+        <span id="modalNewsDate" style="font-size:11px; color:var(--text-muted);"></span>
+        <h2 id="modalNewsTitle" style="margin:8px 0; font-size:18px; color:var(--primary);"></h2>
         <div id="modalNewsContent" style="font-size:14px; line-height:1.6; white-space: pre-wrap;"></div>
     </div>
 </div>
