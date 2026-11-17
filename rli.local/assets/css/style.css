@@ -9,9 +9,199 @@
     --border-color: #cbd5e1;
     --radius: 10px;
     --shadow: 0 4px 16px rgba(0, 102, 255, 0.08);
-    
-    /* Фон по умолчанию для главной страницы */
+
     --bg-image: url('../img/bg/default.jpg');
+}
+
+
+body:not(.is-home) .main-header.profile-header-theme {
+    background: #ffffff;
+    border-bottom: 2.5px solid var(--primary);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+body:not(.is-home) .main-header.profile-header-theme .brand-text strong {
+    color: var(--primary);
+}
+
+body:not(.is-home) .main-header.profile-header-theme .brand-text span {
+    color: #475569;
+}
+
+body:not(.is-home) .main-header.profile-header-theme .top-nav a {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+body:not(.is-home) .main-header.profile-header-theme .top-nav a:hover {
+    color: #0f172a;
+    background: rgba(0, 0, 0, 0.04);
+}
+
+body:not(.is-home) .main-header.profile-header-theme .nav-username {
+    color: #0f172a;
+    font-weight: 700;
+}
+
+body:not(.is-home) .main-header.profile-header-theme .top-nav a.nav-accent {
+    background: var(--primary);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body:not(.is-home) .main-header.profile-header-theme .top-nav a.nav-accent:hover {
+    opacity: 0.9;
+    color: #ffffff;
+}
+
+body:not(.is-home) .main-header.profile-header-theme .burger-btn span {
+    background-color: var(--primary);
+}
+
+
+@media (max-width: 768px) {
+    body:not(.is-home) .main-header.profile-header-theme .top-nav {
+        background: #ffffff;
+        border-top-color: #cbd5e1;
+    }
+    body:not(.is-home) .main-header.profile-header-theme .top-nav a:hover {
+        background: #f1f5f9;
+    }
+}
+
+
+.special-announcement-card {
+    background: #f8fafc;
+    border: 1.5px solid #94a3b8;
+    border-left: 5px solid #0f172a;
+    padding: 20px 24px;
+    border-radius: 3px;
+}
+
+.special-announcement-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #f8fafc;
+    background: #0f172a;
+    padding: 3px 8px;
+    border-radius: 2px;
+    margin-bottom: 10px;
+}
+
+.special-announcement-title {
+    font-size: 18px;
+    color: #0f172a;
+    margin-bottom: 8px;
+}
+
+.special-announcement-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #1e293b;
+    white-space: pre-wrap;
+}
+
+.special-announcement-btn {
+    background: #0f172a;
+    color: #ffffff;
+    border-color: #0f172a;
+    border-radius: 3px;
+    box-shadow: none;
+}
+
+.special-announcement-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+    box-shadow: none;
+}
+
+.badge-active {
+    display: inline-block;
+    background: #dcfce7;
+    color: #14532d;
+    border: 1px solid #14532d;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 900;
+    border-radius: 2px;
+}
+
+.badge-burned {
+    display: inline-block;
+    background: #fee2e2;
+    color: #7f1d1d;
+    border: 1px solid #7f1d1d;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 900;
+    border-radius: 2px;
+}
+
+
+.rli-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.72);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.rli-modal-box {
+    background: #ffffff;
+    color: var(--text-main);
+    border: 2px solid #0f172a;
+    border-radius: 3px;
+    width: 100%;
+    max-width: 430px;
+    overflow: hidden;
+}
+
+.rli-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #0f172a;
+    border-bottom: 1.5px solid #334155;
+}
+
+.rli-modal-head h3 {
+    font-size: 15px;
+    margin: 0;
+    color: #f8fafc;
+}
+
+.rli-modal-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+    color: #cbd5e1;
+    line-height: 1;
+}
+
+.rli-modal-body {
+    padding: 16px;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.rli-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #f1f5f9;
+    border-top: 1px solid #cbd5e1;
 }
 
 * {
@@ -31,7 +221,6 @@ body {
     min-height: 100vh;
 }
 
-/* Фоновые линии-картинки отображаются ТОЛЬКО на главной странице */
 body.is-home {
     background-image: var(--bg-image);
     background-repeat: no-repeat;
@@ -88,7 +277,6 @@ h1, h2, h3, h4, .hero-title, .brand-text strong, .btn-primary, .hours-counter st
     font-weight: 700;
 }
 
-/* Кнопка "3 полоски" (скрыта на ПК, видна на телефонах) */
 .burger-btn {
     display: none;
     flex-direction: column;
@@ -152,7 +340,6 @@ h1, h2, h3, h4, .hero-title, .brand-text strong, .btn-primary, .hours-counter st
     box-shadow: 0 4px 12px rgba(0, 102, 255, 0.25);
 }
 
-/* Главный экран */
 .hero-section {
     padding: 60px 0 80px;
 }
@@ -230,6 +417,11 @@ h1, h2, h3, h4, .hero-title, .brand-text strong, .btn-primary, .hours-counter st
     box-shadow: 0 5px 15px rgba(0, 102, 255, 0.3);
 }
 
+.filter-btn.active {
+    background: var(--primary);
+    color: #ffffff;
+}
+
 .profile-card-box {
     background: rgba(255, 255, 255, 0.96);
     border: 3px solid var(--card-border);
@@ -289,8 +481,9 @@ h1, h2, h3, h4, .hero-title, .brand-text strong, .btn-primary, .hours-counter st
 }
 
 .alert-error {
-    background: #ffe3e3;
-    color: #a61b1b;
+    background: #fee2e2;
+    color: #7f1d1d;
+    border: 1.5px solid #991b1b;
     padding: 12px;
     border-radius: var(--radius);
     margin-bottom: 16px;
@@ -298,8 +491,9 @@ h1, h2, h3, h4, .hero-title, .brand-text strong, .btn-primary, .hours-counter st
 }
 
 .alert-success {
-    background: #e6fffa;
-    color: #117a65;
+    background: #dcfce7;
+    color: #14532d;
+    border: 1.5px solid #166534;
     padding: 12px;
     border-radius: var(--radius);
     margin-bottom: 16px;
@@ -410,9 +604,6 @@ h1, h2, h3, h4, .hero-title, .brand-text strong, .btn-primary, .hours-counter st
     gap: 12px;
 }
 
-/* =========================================================
-   АДАПТАЦИЯ ПОД ПЛАНШЕТЫ И ТЕЛЕФОНЫ (Компактная версия)
-   ========================================================= */
 @media (max-width: 900px) {
     .hero-grid {
         grid-template-columns: 1fr;
@@ -442,12 +633,10 @@ h1, h2, h3, h4, .hero-title, .brand-text strong, .btn-primary, .hours-counter st
         padding: 0 14px;
     }
 
-    /* Показываем бургер-кнопку ("3 полоски") */
     .burger-btn {
         display: flex;
     }
 
-    /* Скрываем стандартное меню и превращаем его в компактную выпадающую панель */
     .top-nav {
         display: none;
         flex-direction: column;
@@ -458,6 +647,11 @@ h1, h2, h3, h4, .hero-title, .brand-text strong, .btn-primary, .hours-counter st
         margin-top: 12px;
         padding: 12px 0 4px;
         gap: 8px;
+    }
+
+    body:not(.is-home) .top-nav {
+        background: #0f172a;
+        border-top-color: #334155;
     }
 
     .top-nav.open {
@@ -474,12 +668,15 @@ h1, h2, h3, h4, .hero-title, .brand-text strong, .btn-primary, .hours-counter st
         background: #f0f4f8;
     }
 
+    body:not(.is-home) .top-nav a:hover {
+        background: #1e293b;
+    }
+
     .top-nav a.nav-accent {
         text-align: center;
         margin-top: 4px;
     }
 
-    /* Главная страница компактно */
     .hero-section {
         padding: 32px 0 40px;
     }
@@ -499,7 +696,6 @@ h1, h2, h3, h4, .hero-title, .brand-text strong, .btn-primary, .hours-counter st
         font-size: 12px;
     }
 
-    /* Новости и карточки профилей в 1 колонку */
     #newsSlider > div,
     section .container > div[style*="grid-template-columns: repeat(3, 1fr)"] {
         min-width: 100% !important;
@@ -522,7 +718,6 @@ h1, h2, h3, h4, .hero-title, .brand-text strong, .btn-primary, .hours-counter st
         height: 52px !important;
     }
 
-    /* Личный кабинет (Dashboard) компактно */
     .dash-wrap {
         padding: 18px 0;
     }
@@ -549,12 +744,10 @@ h1, h2, h3, h4, .hero-title, .brand-text strong, .btn-primary, .hours-counter st
         font-size: 15px;
     }
 
-    /* Две колонки чеков и штрафов в 1 колонку */
     .dash-wrap > div[style*="grid-template-columns: 1fr 1fr"] {
         grid-template-columns: 1fr !important;
     }
 
-    /* Все формы в кабинете в 1 колонку */
     .auth-box {
         padding: 18px;
         margin: 16px auto;
@@ -564,7 +757,6 @@ h1, h2, h3, h4, .hero-title, .brand-text strong, .btn-primary, .hours-counter st
         grid-template-columns: 1fr !important;
     }
 
-    /* Таблицы с горизонтальным скроллом, чтобы не ломали экран */
     .data-table {
         display: block;
         overflow-x: auto;
@@ -576,12 +768,10 @@ h1, h2, h3, h4, .hero-title, .brand-text strong, .btn-primary, .hours-counter st
         font-size: 12px;
     }
 
-    /* Конституция компактно */
     .container > div[style*="padding:40px"] {
         padding: 20px !important;
     }
 
-    /* Меню столовой в 1 колонку */
     form[style*="display:flex; gap:12px"] {
         flex-direction: column;
         align-items: stretch !important;

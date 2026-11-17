@@ -8,11 +8,11 @@ $newsList = $pdo->query("
     JOIN users u ON n.author_id = u.id 
     ORDER BY n.created_at DESC
 ")->fetchAll();
+
+$specialAnnouncements = $pdo->query("SELECT * FROM special_announcements WHERE expires_at > NOW() ORDER BY created_at DESC")->fetchAll();
 ?>
 
 
-
-<!-- Главный экран -->
 <section class="hero-section">
     <div class="container hero-grid">
         <div>
@@ -31,8 +31,11 @@ $newsList = $pdo->query("
                 <a href="#" class="social-circle" style="background:#0a0a8c;">SF</a>
             </div>
 
-            <div style="display:flex; align-items:center; gap:16px;">
+            <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
                 <a href="menu.php" class="btn-hero">Меню</a>
+                <a href="schedule.php" class="btn-hero">Расписание</a>
+                <a href="constitution.php" class="btn-hero">Конституция</a>
+                <a href="activists.php" class="btn-hero">Активисты</a>
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <a href="dashboard.php" class="btn-hero">Мой Кабинет</a>
                 <?php else: ?>
@@ -41,7 +44,6 @@ $newsList = $pdo->query("
             </div>
         </div>
 
-        <!-- Крупный герб/логотип справа БЕЗ обводки и рамок -->
         <div style="display:flex; justify-content:center; align-items:center;">
             <?php 
                 $crestToDisplay = 'assets/img/crests/main_emblem.jpg';
@@ -60,7 +62,33 @@ $newsList = $pdo->query("
     </div>
 </section>
 
-<!-- Лента новостей -->
+
+<?php if (!empty($specialAnnouncements)): ?>
+    <section style="padding: 10px 0 30px;">
+        <div class="container">
+            <h2 style="font-size:20px; color:var(--text-main); margin-bottom:14px;">Специальные объявления руководства</h2>
+            <div style="display:flex; flex-direction:column; gap:14px;">
+                <?php foreach ($specialAnnouncements as $sa): ?>
+                    <div class="special-announcement-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                            <span class="special-announcement-tag"><?= $sa['is_ball'] ? 'Специальное событие • Бал' : 'Официальное объявление' ?></span>
+                            <span style="font-size:12px; color:#475569;">Актуально до: <?= date('d.m.Y H:i', strtotime($sa['expires_at'])) ?></span>
+                        </div>
+                        <h3 class="special-announcement-title"><?= htmlspecialchars($sa['title']) ?></h3>
+                        <p class="special-announcement-text"><?= htmlspecialchars($sa['content']) ?></p>
+                        <?php if ($sa['is_ball'] && isset($_SESSION['user_id'])): ?>
+                            <div style="margin-top:14px;">
+                                <a href="dashboard.php" class="btn-primary special-announcement-btn">Оформить билет на бал в кабинете</a>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </section>
+<?php endif; ?>
+
+
 <section style="padding: 20px 0 40px;">
     <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -101,7 +129,7 @@ $newsList = $pdo->query("
     </div>
 </section>
 
-<!-- Профильные классы лицея -->
+
 <section class="profiles-section" id="study" style="padding: 30px 0 70px;">
     <div class="container">
         <h2 style="font-size:24px; margin-bottom:24px; color:var(--text-main);">Профильные классы лицея</h2>
@@ -152,7 +180,7 @@ $newsList = $pdo->query("
     </div>
 </section>
 
-<!-- Модальное окно новости -->
+
 <div id="newsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
     <div style="background:#fff; color:var(--text-main); padding:30px; border-radius:var(--radius); max-width:560px; width:90%; max-height:85vh; overflow-y:auto; position:relative; border:2px solid var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
         <button onclick="closeNewsModal()" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:20px; cursor:pointer; font-weight:900;">✕</button>
@@ -169,6 +197,7 @@ function slideNews(direction) {
     const slider = document.getElementById('newsSlider');
     if (!slider) return;
     const items = slider.children;
+    if (items.length === 0) return;
     const maxSlide = Math.max(0, items.length - 3);
     currentSlide += direction;
     if (currentSlide < 0) currentSlide = 0;
